@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import sys
 
+
 # изучить регулярные выражения и поправить
 
 
@@ -23,7 +24,7 @@ class Bookmaker:
         self.events = list()
 
     def get_response(self, url):
-        print(url, self.headers)
+        #print(url, self.headers)
         response = requests.get(url, headers=self.headers)
         if response.status_code == 200:
             return response
@@ -40,6 +41,28 @@ class Bookmaker:
                 sys.exit()
             self.sport = sport
 
+    def show_events(self):
+        for event in self.events:
+            event.show_event()
+
+    def get_events(self):
+        return self.events
+
+    def update_events(self):
+        events_objs = self.get_events()
+        for event_new in events_objs:
+            if event_new in self.events:
+                self.events[self.events.index(event_new)].total_score1 = event_new.total_score1
+                self.events[self.events.index(event_new)].total_score2 = event_new.total_score2
+                self.events[self.events.index(event_new)].scores_1 = event_new.scores_1
+                self.events[self.events.index(event_new)].scores_2 = event_new.scores_2
+            else:
+                self.events.append(event_new )
+        for event_old in self.events:
+            if event_old not in events_objs:
+                self.events.remove(event_old)
+
+
 
 class Pari(Bookmaker):
     SPORTS = {'Фут-зал': 'foothall'}
@@ -50,7 +73,7 @@ class Pari(Bookmaker):
         self.name = 'париматч'
         self.main_page = 'http://ru.parimatch.com/'
 
-    def update_events(self):
+    def get_events(self):
         url = self.main_page + 'live_as.html?curs=0&curName=$&shed=0'
         response = self.get_response(url)
         soup = BeautifulSoup(response.text, 'lxml')
@@ -62,7 +85,7 @@ class Pari(Bookmaker):
         for champ in champs:
             champs_dict[champ.select_one('a')['id']] = champ.text
         events = sport.select('.subitem')
-        events_info = []
+        events_objs = []
         for event in events:
             name_block = event.select('.td_n')
             champ = champs_dict[event['id'].replace('Item', '')]
@@ -79,41 +102,17 @@ class Pari(Bookmaker):
                 score_sets = score_full.split('(')[1].replace(')', '')
                 scores_1 = [int(el.split('-')[0]) for el in score_sets.split(',')]
                 scores_2 = [int(el.split('-')[1]) for el in score_sets.split(',')]
-                event_info = {
-                    'id': href.split('=')[-1],
-                    'champ': champ,
-                    'command1': command1,
-                    'command2': command2,
-                    'total_score1': total_score1,
-                    'total_score2': total_score2,
-                    'scores_1': scores_1,
-                    'scores_2': scores_2
-                }
-                events_info.append(event_info)
-        self.events = events_info
-
-
-class Event:
-    def __init__(self, bookmaker,
-                 champ,
-                 command1,
-                 command2,
-                 total_score1,
-                 total_score2,
-                 scores_1,
-                 scores_2,
-                 index,
-                 time=None):
-        self.bookmaker = bookmaker
-        self.champ = champ
-        self.command1 = command1
-        self.command2 = command2
-        self.total_score1 = total_score1
-        self.total_score2 = total_score2
-        self.scores_1 = scores_1
-        self.scores_2 = scores_2
-        self.time = time
-        self.index = index
+                event_info = Event(bookmaker=self,
+                                   champ=champ,
+                                   command1=command1,
+                                   command2=command2,
+                                   total_score1=total_score1,
+                                   total_score2=total_score2,
+                                   scores_1=scores_1,
+                                   scores_2=scores_2,
+                                   index=href.split('=')[-1])
+                events_objs.append(event_info)
+        return events_objs
 
 
 class Xbet(Bookmaker):
@@ -125,11 +124,12 @@ class Xbet(Bookmaker):
         self.name = '1xbet'
         self.main_page = 'https://1xstavka.ru/'
 
-    def update_events(self):
-        url = self.main_page + 'LiveFeed/BestGamesExtVZip?sports={}&count=10&antisports=188&partner=51&getEmpty=true&mode=4&country=22'.format(self.SPORTS[self.sport])
+    def get_events(self):
+        url = self.main_page + 'LiveFeed/BestGamesExtVZip?sports={}&count=10&antisports=188&partner=51&getEmpty=true&mode=4&country=22'.format(
+            self.SPORTS[self.sport])
         response = self.get_response(url)
         data = response.json()
-        events = []
+        events_objs = []
         for event in data['Value']:
             index = event['I']
             champ = event['L']
@@ -160,16 +160,68 @@ class Xbet(Bookmaker):
                 else:
                     scores_2.append(0)
             timer = event['SC']['TS']
-            event_info = {'champ': champ, 'command1': command1, 'command2': command2,
-                          'total_score1': int(total_score1), 'total_score2': int(total_score2), 'scores_1': scores_1,
-                          'scores_2': scores_2, 'time': timer, 'id': index}
-            events.append(event_info)
-        self.events = events
+            event_info = Event(bookmaker=self,
+                               champ=champ,
+                               command1=command1,
+                               command2=command2,
+                               total_score1=int(total_score1),
+                               total_score2=int(total_score2),
+                               scores_1=scores_1,
+                               scores_2=scores_2,
+                               index=index,
+                               time=timer)
+            events_objs.append(event_info)
+        return events_objs
+
+
+class Event:
+    def __init__(self, bookmaker,
+                 champ,
+                 command1,
+                 command2,
+                 total_score1,
+                 total_score2,
+                 scores_1,
+                 scores_2,
+                 index,
+                 time=None):
+        self.bookmaker = bookmaker
+        self.champ = champ
+        self.command1 = command1
+        self.command2 = command2
+        self.total_score1 = total_score1
+        self.total_score2 = total_score2
+        self.scores_1 = scores_1
+        self.scores_2 = scores_2
+        self.time = time
+        self.index = index
+
+    def __eq__(self, other):
+        if isinstance(other, Event):
+            return (self.bookmaker == other.bookmaker and
+                    self.champ == other.champ and
+                    self.command1 == other.command1 and
+                    self.command2 == other.command2 and
+                    self.index == other.index)
+        return NotImplemented
+
+    def show_event(self):
+        print('*****Cобытие*****')
+        print('Букмекер: ' + self.bookmaker.name)
+        print('Чемпионат: ' + self.champ)
+        print('Команда 1: ' + self.command1)
+        print('Команда 2: ' + self.command2)
+        print('Счёт по таймам: {} {}'.format(self.scores_1, self.scores_2))
+        print('Общий счёт: {} {}'.format(self.total_score1, self.total_score2))
 
 
 if __name__ == '__main__':
     pari = Pari()
-    pari.update_events()
     xbet = Xbet()
-    xbet.update_events()
-    print(pari.events, xbet.events)
+    while True:
+        pari.update_events()
+        pari.show_events()
+        xbet.update_events()
+        xbet.show_events()
+    # xbet.update_events()
+    # print(pari.events, xbet.events)
