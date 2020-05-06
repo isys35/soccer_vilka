@@ -24,7 +24,7 @@ class Bookmaker:
         self.events = list()
 
     def get_response(self, url):
-        #print(url, self.headers)
+        # print(url, self.headers)
         response = requests.get(url, headers=self.headers)
         if response.status_code == 200:
             return response
@@ -57,11 +57,13 @@ class Bookmaker:
                 self.events[self.events.index(event_new)].scores_1 = event_new.scores_1
                 self.events[self.events.index(event_new)].scores_2 = event_new.scores_2
             else:
-                self.events.append(event_new )
+                self.events.append(event_new)
         for event_old in self.events:
             if event_old not in events_objs:
                 self.events.remove(event_old)
 
+    def __str__(self):
+        return self.name
 
 
 class Pari(Bookmaker):
@@ -113,6 +115,8 @@ class Pari(Bookmaker):
                                    index=href.split('=')[-1])
                 events_objs.append(event_info)
         return events_objs
+
+
 
 
 class Xbet(Bookmaker):
@@ -215,13 +219,61 @@ class Event:
         print('Общий счёт: {} {}'.format(self.total_score1, self.total_score2))
 
 
+class Match:
+    def __init__(self, event1, event2):
+        self.event1 = event1
+        self.event2 = event2
+
+    def __eq__(self, other):
+        if isinstance(other, Match):
+            return (self.event1 == other.event1 and
+                    self.event2 == other.event2)
+        return NotImplemented
+
+    def show_match(self):
+        print('*****Cовпадение*****')
+        print('Букмекер: {} ---------- {} '.format(self.event1.bookmaker, self.event2.bookmaker))
+        print('Чемпионат: {} ---------- {} '.format(self.event1.champ, self.event2.champ))
+        print('Команда 1: {} ---------- {} '.format(self.event1.command1, self.event2.command1))
+        print('Команда 2: {} ---------- {} '.format(self.event1.command2, self.event2.command2))
+        print('Счёт по таймам: {} {}  ---------- {} {}'.format(self.event1.scores_1,
+                                                               self.event1.scores_2,
+                                                               self.event2.scores_1,  # уменьшить обЪём
+                                                               self.event2.scores_2))
+        print('Общий счёт: {} {} ---------- {} {}'.format(self.event1.total_score1,
+                                                          self.event1.total_score2,
+                                                          self.event2.total_score1,
+                                                          self.event2.total_score2))
+
+
+# поразмыслить над неймингом
+class MainApp:
+    def __init__(self):
+        self.boookmekers = [Pari(), Xbet()]
+        self.matches = []
+
+    def run(self):
+        while True:
+            for bookmaker in self.boookmekers:
+                bookmaker.update_events()
+                bookmaker.show_events()
+                self.update_match()
+
+    def update_match(self):
+        print('Обновление одинаковых матчей')
+        for event_1 in self.boookmekers[0].events:
+            for event_2 in self.boookmekers[1].events:
+                if event_1.scores_1 == event_2.scores_1 and event_1.scores_2 == event_2.scores_2:
+                    match = Match(event_1, event_2)
+                    print(match.show_match())
+                    if match in self.matches:
+                        pass
+                    else:
+                        self.matches.append(match)
+
+
 if __name__ == '__main__':
-    pari = Pari()
-    xbet = Xbet()
-    while True:
-        pari.update_events()
-        pari.show_events()
-        xbet.update_events()
-        xbet.show_events()
+    app = MainApp()
+    app.run()
     # xbet.update_events()
     # print(pari.events, xbet.events)
