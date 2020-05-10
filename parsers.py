@@ -165,6 +165,14 @@ class Pari(Bookmaker):
                                                              'smaller': float(td_2_time[id_total + 2].text)}}
         return totals
 
+    def get_status_game(self, index):
+        url = self.main_page + 'live_ar.html?hl=' + str(index) + '&hl=' + str(index) + ',&curs=0&curName=$'
+        response = self.get_response(url)
+        if 'Прием ставок live в выбранных Вами матчах завершен. Пожалуйста, сделайте новый выбор' in response.text:
+            return False
+        else:
+            return True
+
 
 class Xbet(Bookmaker):
     SPORTS = {'Фут-зал': 1}
@@ -265,7 +273,11 @@ class Xbet(Bookmaker):
         main_time_url = url.format(index)
         response = self.get_response(main_time_url)
         data_main_time = response.json()
-        totals['main_time'] = self.get_totals_from_json(data_main_time)
+        try:
+            totals['main_time'] = self.get_totals_from_json(data_main_time)
+        except TypeError:
+            print(data_main_time)
+            sys.exit()
         time_2_id = self.get_id_2_time(data_main_time)
         if time_2_id:
             url_2_time = url.format(time_2_id)
@@ -325,6 +337,7 @@ class Match:
         self.event1 = event1
         self.event2 = event2
         self.vilki = []
+        self.status_in_play = True
 
     def __eq__(self, other):
         if isinstance(other, Match):
@@ -334,6 +347,8 @@ class Match:
 
     def show_match(self):
         print('*****Cовпадение*****')
+        print('URL {}: {}'.format(self.event1.bookmaker, self.event1.bookmaker.main_page + 'bet.html?hl=' + self.event1.index))
+        print('URl {}: {}')
         print('Букмекер: {} ---------- {} '.format(self.event1.bookmaker, self.event2.bookmaker))
         print('Чемпионат: {} ---------- {} '.format(self.event1.champ, self.event2.champ))
         print('Команда 1: {} ---------- {} '.format(self.event1.command1, self.event2.command1))
@@ -356,8 +371,35 @@ class Match:
         self.event2.update_totals()
         self.update_vilki()
 
+    def update_status(self):
+        if not self.event1.bookmaker.get_status_game(self.event1.index):
+            self.status_in_play = False
+
     def update_vilki(self):
-        pass
+        print('Обновление вилок')
+        totals1 = self.event1.totals
+        totals2 = self.event2.totals
+        time = '2_time'
+        vilka_new = []
+        if time in totals1 and time in totals2:
+            print(totals1[time])
+            print(totals2[time])
+            total_type = 'total'
+            if total_type in totals1[time] and total_type in totals2[time]:
+                for point_event1 in totals1[time][total_type]:
+                    for point_event2 in totals2[time][total_type]:
+                        if point_event1 == point_event2:
+                            vilka = Vilka(self, time, point_event1, total_type)
+                            vilka_new.append(vilka)
+        for vilka in vilka_new:
+            if vilka in self.vilki:
+                self.vilki[self.vilki.index(vilka)].update_vilka()
+            else:
+                self.vilki.append(vilka)
+        for vilka in self.vilki:
+            if vilka not in vilka_new:
+                self.vilki.remove(vilka)
+        print(self.vilki)
 
 
 class Vilka:
@@ -368,6 +410,7 @@ class Vilka:
         self.time = time
         self.point = point
         self.total_type = total_type
+        self.update_vilka()
 
     def __eq__(self, other):
         if isinstance(other, Vilka):
@@ -377,10 +420,19 @@ class Vilka:
                     self.total_type == other.total_type)
         return NotImplemented
 
+    def update_vilka(self):
+        print('Обновление вилки')
+        kf1 = self.match.event1.totals[self.time][self.total_type][self.point]['more']
+        kf2 = self.match.event2.totals[self.time][self.total_type][self.point]['smaller']
+        self.koef = 1/kf1 + 1/kf2
+        self.value = 100*(1-self.koef)
+        print(self.point)
+        print(self.koef)
+        print(self.value)
 
 
 # поразмыслить над неймингом
-class MainApp:
+class Parser:
     def __init__(self):
         self.boookmekers = [Pari(), Xbet()]
         self.matches = []
@@ -391,6 +443,7 @@ class MainApp:
                 bookmaker.update_events()
                 bookmaker.show_events()
                 self.update_match()
+                print(self.matches)
 
     def update_match(self):
         print('Обновление одинаковых матчей')
@@ -398,17 +451,21 @@ class MainApp:
             for event_2 in self.boookmekers[1].events:
                 if event_1.scores_1 == event_2.scores_1 and event_1.scores_2 == event_2.scores_2:
                     match = Match(event_1, event_2)
-                    print(match.show_match())
+                    match.show_match()
                     if match not in self.matches:
                         self.matches.append(match)
         for match in self.matches:
+            match.update_status()
+            if not match.status_in_play:
+                self.matches.remove(match)
+        for match in self.matches:
+            match.update_status()
             match.update_totals()
-            match.show_match_totals()
+            # match.show_match_totals()
 
 if __name__ == '__main__':
-    app = MainApp()
+    app = Parser()
     app.run()
-    # pari = Pari()
     # pari.update_events()
     # print(pari.events)
     # xbet = Xbet()

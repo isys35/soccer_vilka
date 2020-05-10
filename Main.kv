@@ -1,0 +1,176 @@
+Container:
+<Container>:
+    orientation: 'vertical'
+    Calculactor:
+    ScrollView:
+        size_hint_y: .8
+        do_scroll_x: False
+        do_scroll_y: True
+        BoxLayout:
+            id: box
+            size_hint_y: None
+            orientation: 'vertical'
+            height: self.minimum_height
+
+<Calculactor>:
+    orientation: 'vertical'
+    size_hint_y: .2
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: .4,.4,.4,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Label:
+            text: 'Д'
+            size_hint_x:.4
+            canvas.before:
+                Color:
+                    rgba: .21,.21,.21,1
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+        Label:
+            text: 'Тайм'
+            size_hint_x:.3
+        BoxLayout:
+            orientation : 'vertical'
+            Label:
+                text: 'Название матча в париматч'
+            Label:
+                text: 'Название матча в 1xcтавка'
+        Label:
+            text: 'Общий счёт'
+    BoxLayout:
+        size_hint_y: .4
+        canvas.before:
+            Color:
+                rgba: .6,.6,.6,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Widget:
+            size_hint_x: .3
+        Widget:
+        Label:
+            text: '[b]Кэф.[/b]'
+            font_size: '12sp'
+            color: .4,.4,.4,1
+            markup: True
+            size_hint_x: .3
+        Widget:
+            size_hint_x: .3
+        Label:
+            text: '[b]Ставка[/b]'
+            font_size: '12sp'
+            color: .4,.4,.4,1
+            markup: True
+            size_hint_x: .3
+        Widget:
+            size_hint_x: .3
+        Label:
+            text: '[b]Доход[/b]'
+            font_size: '12sp'
+            color: .4,.4,.4,1
+            markup: True
+            size_hint_x: .3
+    BoxLayout:
+        size_hint_y: .6
+        canvas.before:
+            Color:
+                rgba: .70,.82,.67,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Label:
+            size_hint_x: .3
+            text: '[b]Париматч[/b]'
+            color: .4,.4,.4,1
+            markup: True
+        Label:
+            text: 'Название комманд'
+            color: 0,0,0,1
+        Label:
+            text: '2.02'
+            size_hint_x: .3
+            color: 0,0,0,1
+        Label:
+            text:'Тб(3.5)'
+            size_hint_x: .3
+            color: 0,0,0,1
+        Label:
+            text: '50.00'
+            size_hint_x: .3
+            color: 0,0,0,1
+        Widget:
+            size_hint_x: .3
+        Label:
+            text: '1.00'
+            size_hint_x: .3
+            color: 0,0,0,1
+    BoxLayout:
+        size_hint_y: .6
+        canvas.before:
+            Color:
+                rgba: .87,.95,.85,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Label:
+            size_hint_x: .3
+            text: '[b]1xставка[/b]'
+            color: .4,.4,.4,1
+            markup: True
+        Label:
+            text: 'Название комманд'
+            color: 0,0,0,1
+        Label:
+            text: '2.02'
+            size_hint_x: .3
+            color: 0,0,0,1
+        Label:
+            text:'Тм(3.5)'
+            size_hint_x: .3
+            color: 0,0,0,1
+        Label:
+            text: '50.00'
+            size_hint_x: .3
+            color: 0,0,0,1
+        CheckBox:
+            size_hint_x: .3
+        Label:
+            text: '1.00'
+            size_hint_x: .3
+            color: 0,0,0,1
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: .6,.6,.6,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        padding: 5
+        size_hint_y: .6
+        Widget:
+            size_hint_x: .3
+        Label:
+            text: 'Округлять до:'
+            color: 0,0,0,1
+            halign: 'right'
+            valign: 'center'
+            text_size: self.size
+        TextInput:
+            multiline: False
+            size_hint_x: .3
+        Widget:
+            size_hint_x: .3
+        Widget:
+            size_hint_x: .3
+        Widget:
+            size_hint_x: .3
+        Widget:
+            size_hint_x: .3
+
+
+
