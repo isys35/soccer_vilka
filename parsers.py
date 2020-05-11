@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 import sys
-
+from threading import Thread
+from widgets import VilkaWidget
 
 # изучить регулярные выражения и поправить
 
@@ -120,7 +121,7 @@ class Pari(Bookmaker):
         url = self.main_page + 'live_ar.html?hl=' + str(index) + '&hl=' + str(index) + ',&curs=0&curName=$'
         totals = {}
         response = self.get_response(url)
-        save_page(response.text, str(index) + 'pari_event.html')
+        #save_page(response.text, str(index) + 'pari_event.html')
         soup = BeautifulSoup(response.text, 'lxml')
         table = soup.select_one('.twp')
         thead = table.select_one('tr')
@@ -369,17 +370,15 @@ class Match:
     def update_totals(self):
         self.event1.update_totals()
         self.event2.update_totals()
-        self.update_vilki()
 
     def update_status(self):
         if not self.event1.bookmaker.get_status_game(self.event1.index):
             self.status_in_play = False
 
     def update_vilki(self):
-        print('Обновление вилок')
         totals1 = self.event1.totals
         totals2 = self.event2.totals
-        time = '2_time'
+        time = 'main_time'
         vilka_new = []
         if time in totals1 and time in totals2:
             print(totals1[time])
@@ -399,13 +398,14 @@ class Match:
         for vilka in self.vilki:
             if vilka not in vilka_new:
                 self.vilki.remove(vilka)
-        print(self.vilki)
 
 
 class Vilka:
     def __init__(self, match, time, point, total_type):
         self.koef = None
         self.value = None
+        self.kf1 = None
+        self.kf2 = None
         self.match = match
         self.time = time
         self.point = point
@@ -421,10 +421,9 @@ class Vilka:
         return NotImplemented
 
     def update_vilka(self):
-        print('Обновление вилки')
-        kf1 = self.match.event1.totals[self.time][self.total_type][self.point]['more']
-        kf2 = self.match.event2.totals[self.time][self.total_type][self.point]['smaller']
-        self.koef = 1/kf1 + 1/kf2
+        self.kf1 = self.match.event1.totals[self.time][self.total_type][self.point]['more']
+        self.kf2 = self.match.event2.totals[self.time][self.total_type][self.point]['smaller']
+        self.koef = 1/self.kf1 + 1/self.kf2
         self.value = 100*(1-self.koef)
         print(self.point)
         print(self.koef)
@@ -436,6 +435,7 @@ class Parser:
     def __init__(self):
         self.boookmekers = [Pari(), Xbet()]
         self.matches = []
+        self.vilki = []
 
     def run(self):
         while True:
@@ -446,12 +446,12 @@ class Parser:
                 print(self.matches)
 
     def update_match(self):
-        print('Обновление одинаковых матчей')
+        # print('Обновление одинаковых матчей')
         for event_1 in self.boookmekers[0].events:
             for event_2 in self.boookmekers[1].events:
                 if event_1.scores_1 == event_2.scores_1 and event_1.scores_2 == event_2.scores_2:
                     match = Match(event_1, event_2)
-                    match.show_match()
+                    #match.show_match()
                     if match not in self.matches:
                         self.matches.append(match)
         for match in self.matches:
@@ -459,21 +459,66 @@ class Parser:
             if not match.status_in_play:
                 self.matches.remove(match)
         for match in self.matches:
-            match.update_status()
             match.update_totals()
             # match.show_match_totals()
+
+    def update_vilki(self):
+        self.vilki = []
+        for match in self.matches:
+            self.vilki.extend(match.vilki)
+
+
+class ParserGui(Parser):
+    def __init__(self, app):
+        super().__init__()
+        self.app = app
+
+    def run(self):
+        while True:
+            if self.app.root:
+                for bookmaker in self.boookmekers:
+                    print('Букмекер {}: получение событий'.format(str(bookmaker)))
+                    bookmaker.update_events()
+                    print('Букмекер {}: {} событий'.format(str(bookmaker), str(len(bookmaker.events))))
+                print('Поиск совпадений')
+                self.update_match()
+                print('{} совпадений'.format(str(len(self.matches))))
+                print('Получение коэффициентов для совпадений')
+                for match in self.matches:
+                    match.update_totals()
+                print('Поиск вилок')
+                for match in self.matches:
+                    match.update_vilki()
+                vilki = [vilka for match in self.matches for vilka in match.vilki]
+                print('Найдено {} вилок'.format(len(vilki)))
+                if vilki:
+                    print('Обновление виджетов')
+                    self.update_widgets(vilki)
+
+    def update_widgets(self, vilki):
+        for vilka in vilki:
+            if vilka not in [widget.vilka for widget in self.app.root.ids.box.children]:
+                vilka_widget = VilkaWidget(vilka)
+                self.app.root.ids.box.add_widget(vilka_widget)
+        for widget in self.app.root.ids.box.children:
+            if widget.vilka not in vilki:
+                self.app.root.ids.box.remove_widget(widget)
+                continue
+            widget.refresh()
+
+    def update_match(self):
+        for event_1 in self.boookmekers[0].events:
+            for event_2 in self.boookmekers[1].events:
+                if event_1.scores_1 == event_2.scores_1 and event_1.scores_2 == event_2.scores_2:
+                    match = Match(event_1, event_2)
+                    # match.show_match()
+                    if match not in self.matches:
+                        self.matches.append(match)
+        for match in self.matches:
+            match.update_status()
+            if not match.status_in_play:
+                self.matches.remove(match)
 
 if __name__ == '__main__':
     app = Parser()
     app.run()
-    # pari.update_events()
-    # print(pari.events)
-    # xbet = Xbet()
-    # xbet.update_events()
-    # print(xbet.events)
-    # for event in pari.events:
-    #     event.update_totals()
-    #     print(event.totals)
-    # for event in xbet.events:
-    #     event.update_totals()
-    #     print(event.totals)

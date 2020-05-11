@@ -1,0 +1,94 @@
+<VilkaWidget>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: 150
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: .38,.63,.79,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        size_hint_y: .3
+        Label:
+            canvas.before:
+                Color:
+                    rgba: .0,.3,.5,1
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            size_hint_x: .15
+            text: '[b]{} %[/b]'.format(root.value_str)
+            markup: True
+        Label:
+            size_hint_x: .3
+            text: '[b]Фут-зал[/b]'
+            markup: True
+        Label:
+            size_hint_x: .3
+        Label:
+            size_hint_x: .15
+            text: ''
+    BoxLayout:
+        size_hint_y:.35
+        canvas.before:
+            Color:
+                rgba: 1,1,1,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Label:
+            size_hint_x:.15
+            text: 'Париматч'
+            color: .38,.63,.79,1
+        BoxLayout:
+            size_hint_x: .55
+            orientation: 'vertical'
+            Label:
+                text: '[b]{}[/b]'.format(root.commands_pari_str)
+                color: 0,0,0,1
+                markup: True
+            Label:
+                text: '{}'.format(root.champ_pari_str)
+                color: .38,.63,.79,1
+        Label:
+            size_hint_x:.15
+            text: 'Тб({})'.format(root.points)
+            color: .38,.63,.79,1
+
+        Label:
+            size_hint_x:.15
+            text: '[b]{}[/b]'.format(root.kf_pari)
+            color: 0,.3,.5,1
+            markup: True
+    BoxLayout:
+        size_hint_y:.35
+        canvas.before:
+            Color:
+                rgba: 1,1,1,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Label:
+            size_hint_x:.15
+            text: '1xставка'
+            color: .38,.63,.79,1
+        BoxLayout:
+            size_hint_x: .55
+            orientation: 'vertical'
+            Label:
+                text: '[b]{}[/b]'.format(root.commands_xbet_str)
+                color: 0,0,0,1
+                markup: True
+            Label:
+                text: '{}'.format(root.champ_xbet_str)
+                color: .38,.63,.79,1
+        Label:
+            size_hint_x:.15
+            text: 'Тм({})'.format(root.points)
+            color: .38,.63,.79,1
+        Label:
+            size_hint_x:.15
+            text: '[b]{}[/b]'.format(root.kf_xbet)
+            color: 0,.3,.5,1
+            markup: True
