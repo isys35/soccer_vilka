@@ -124,7 +124,11 @@ class Pari(Bookmaker):
         #save_page(response.text, str(index) + 'pari_event.html')
         soup = BeautifulSoup(response.text, 'lxml')
         table = soup.select_one('.twp')
-        thead = table.select_one('tr')
+        try:
+            thead = table.select_one('tr')
+        except AttributeError:
+            save_page(response.text, str(index) +'AttributeError' + 'pari_event.html')
+            sys.exit()
         table_headers = thead.select('th')
         row1 = soup.select('.row1')
         td_row1 = row1[0].select('td')
@@ -147,9 +151,13 @@ class Pari(Bookmaker):
                         totals['main_time']['individ_total_1'] = {float(points[0].text):
                                                                       {'more': float(more_koef[0].text),
                                                                        'smaller': float(smaller_koef[0].text)}}
-                        totals['main_time']['individ_total_2'] = {float(points[1].text):
-                                                                      {'more': float(more_koef[1].text),
-                                                                       'smaller': float(smaller_koef[1].text)}}
+                        try:
+                            totals['main_time']['individ_total_2'] = {float(points[1].text):
+                                                                          {'more': float(more_koef[1].text),
+                                                                           'smaller': float(smaller_koef[1].text)}}
+                        except IndexError:
+                            save_page(response.text, str(index) + 'IndexError' + 'pari_event.html')
+                            sys.exit()
         bk_row1_prop = row1[1].select('.bk')
         time_2_info = None
         for time_info in bk_row1_prop:
@@ -219,7 +227,11 @@ class Xbet(Bookmaker):
                     scores_2.append(sc['Value']['S2'])
                 else:
                     scores_2.append(0)
-            timer = event['SC']['TS']
+            try:
+                timer = event['SC']['TS']
+            except KeyError:
+                save_page(url, 'key_eror_xbet.html')
+                sys.exit()
             event_info = Event(bookmaker=self,
                                champ=champ,
                                command1=command1,
@@ -472,9 +484,12 @@ class ParserGui(Parser):
     def __init__(self, app):
         super().__init__()
         self.app = app
+        self.breaker = False
 
     def run(self):
         while True:
+            if self.breaker:
+                break
             if self.app.root:
                 for bookmaker in self.boookmekers:
                     print('Букмекер {}: получение событий'.format(str(bookmaker)))
@@ -498,7 +513,7 @@ class ParserGui(Parser):
     def update_widgets(self, vilki):
         for vilka in vilki:
             if vilka not in [widget.vilka for widget in self.app.root.ids.box.children]:
-                vilka_widget = VilkaWidget(vilka)
+                vilka_widget = VilkaWidget(vilka, self.app.root.ids.calculator)
                 self.app.root.ids.box.add_widget(vilka_widget)
         for widget in self.app.root.ids.box.children:
             if widget.vilka not in vilki:
@@ -518,6 +533,9 @@ class ParserGui(Parser):
             match.update_status()
             if not match.status_in_play:
                 self.matches.remove(match)
+
+    def stop(self):
+        self.breaker = True
 
 if __name__ == '__main__':
     app = Parser()

@@ -2,6 +2,7 @@ Container:
 <Container>:
     orientation: 'vertical'
     Calculactor:
+        id: calculator
     ScrollView:
         size_hint_y: .8
         do_scroll_x: False
@@ -25,7 +26,7 @@ Container:
                 size: self.size
                 pos: self.pos
         Label:
-            text: 'Д'
+            text: '{}'.format(root.value_str)
             size_hint_x:.4
             canvas.before:
                 Color:
@@ -34,16 +35,16 @@ Container:
                     size: self.size
                     pos: self.pos
         Label:
-            text: 'Тайм'
+            text: '2-ой тайм'
             size_hint_x:.3
         BoxLayout:
             orientation : 'vertical'
             Label:
-                text: 'Название матча в париматч'
+                text: '{}'.format(root.champ_pari_str)
             Label:
-                text: 'Название матча в 1xcтавка'
+                text: '{}'.format(root.champ_xbet_str)
         Label:
-            text: 'Общий счёт'
+            text: '{}'.format(root.total_score)
     BoxLayout:
         size_hint_y: .4
         canvas.before:
@@ -91,24 +92,26 @@ Container:
             color: .4,.4,.4,1
             markup: True
         Label:
-            text: 'Название комманд'
+            text: '{}'.format(root.commands_pari_str)
             color: 0,0,0,1
         Label:
-            text: '2.02'
+            text: '{}'.format(root.kf_pari)
             size_hint_x: .3
             color: 0,0,0,1
         Label:
-            text:'Тб(3.5)'
+            text:'Тб({})'.format(root.points)
             size_hint_x: .3
             color: 0,0,0,1
-        Label:
+        TextInput:
+            id: bet1
             text: '50.00'
             size_hint_x: .3
             color: 0,0,0,1
+            multiline: False
         Widget:
             size_hint_x: .3
         Label:
-            text: '1.00'
+            id: profit1
             size_hint_x: .3
             color: 0,0,0,1
     BoxLayout:
@@ -125,24 +128,28 @@ Container:
             color: .4,.4,.4,1
             markup: True
         Label:
-            text: 'Название комманд'
+            text: '{}'.format(root.commands_xbet_str)
             color: 0,0,0,1
         Label:
-            text: '2.02'
+            text: '{}'.format(root.kf_xbet)
             size_hint_x: .3
             color: 0,0,0,1
         Label:
-            text:'Тм(3.5)'
+            text:'Тм({})'.format(root.points)
             size_hint_x: .3
             color: 0,0,0,1
         Label:
+            id: bet2
             text: '50.00'
             size_hint_x: .3
             color: 0,0,0,1
         CheckBox:
+            id: check_box
             size_hint_x: .3
+            color: 0,0,0,1
         Label:
-            text: '1.00'
+            id: profit2
+            text: ''
             size_hint_x: .3
             color: 0,0,0,1
     BoxLayout:
@@ -163,12 +170,16 @@ Container:
             valign: 'center'
             text_size: self.size
         TextInput:
+            id: rounder
+            text: '2'
             multiline: False
             size_hint_x: .3
         Widget:
             size_hint_x: .3
-        Widget:
+        Label:
+            id: sum_c
             size_hint_x: .3
+            color: 0,0,0,1
         Widget:
             size_hint_x: .3
         Widget:

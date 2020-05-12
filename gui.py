@@ -19,7 +19,30 @@ class Container(BoxLayout):
 
 
 class Calculactor(BoxLayout):
-    pass
+    value_str = StringProperty()
+    commands_pari_str = StringProperty()
+    champ_pari_str = StringProperty()
+    commands_xbet_str = StringProperty()
+    champ_xbet_str = StringProperty()
+    points = StringProperty()
+    kf_pari = StringProperty()
+    kf_xbet = StringProperty()
+    total_score = StringProperty()
+
+    def calculate(self, *args):
+        self.ids.bet1.bind(on_text_validate=self.calculate)
+        self.ids.rounder.bind(on_text_validate=self.calculate)
+        self.ids.check_box.bind(on_press=self.calculate)
+        if not self.ids.check_box.active:
+            c2 = round((float(self.ids.bet1.text) * float(self.kf_pari)) / float(self.kf_xbet), int(self.ids.rounder.text))
+        else:
+            c2 = round(float(self.ids.bet1.text) / (float(self.kf_xbet)-1), int(self.ids.rounder.text))
+        self.ids.bet2.text = str(c2)
+        self.ids.sum_c.text = str(round(c2+float(self.ids.bet1.text), int(self.ids.rounder.text)))
+        self.ids.profit1.text = str(round(float(self.ids.bet1.text) * float(self.kf_pari) - (float(self.ids.bet1.text)+c2), int(self.ids.rounder.text)))
+        self.ids.profit2.text = str(
+            round(c2 * float(self.kf_xbet) - (float(self.ids.bet1.text) + c2),
+                  int(self.ids.rounder.text)))
 
 
 with open("Main.kv", encoding='utf8') as f:
@@ -43,6 +66,9 @@ class ParserThread(Thread):
 
     def run(self):
         self.parser.run()
+
+    def stop(self):
+        self.parser.stop()
 
 # class AppParser(Thread):
 #     def __init__(self, app, parser):
@@ -88,6 +114,7 @@ class ParserThread(Thread):
 if __name__ == '__main__':
     app = MainApp()
     app.run()
+    app.parser.stop()
 
 
 
