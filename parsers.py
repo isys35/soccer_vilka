@@ -390,7 +390,7 @@ class Match:
     def update_vilki(self):
         totals1 = self.event1.totals
         totals2 = self.event2.totals
-        time = 'main_time'
+        time = '2_time'
         vilka_new = []
         if time in totals1 and time in totals2:
             print(totals1[time])
