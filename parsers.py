@@ -11,6 +11,7 @@ def save_page(html, file_name):
     with open(file_name, 'w', encoding='utf8') as html_file:
         html_file.write(html)
 
+
 def load_settings():
     with open('settings.txt', 'r',encoding='utf8') as settings_file:
         settings_str = settings_file.read()
@@ -20,7 +21,6 @@ def load_settings():
             if '=' in el:
                 settings[el.split('=')[0].strip()] = eval(el.split('=')[1].strip())
         return settings
-
 
 
 class Bookmaker:
