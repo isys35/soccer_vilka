@@ -11,6 +11,17 @@ def save_page(html, file_name):
     with open(file_name, 'w', encoding='utf8') as html_file:
         html_file.write(html)
 
+def load_settings():
+    with open('settings','r',encoding='utf8') as settings_file:
+        settings_str = settings_file.read()
+        splited = settings_str.split(';')
+        settings = {}
+        for el in splited:
+            if '=' in el:
+                settings[el.split('=')[0].strip()] = eval(el.split('=')[1].strip())
+        return settings
+
+
 
 class Bookmaker:
     SPORTS = {'Фут-зал': None}
@@ -485,6 +496,7 @@ class ParserGui(Parser):
         super().__init__()
         self.app = app
         self.breaker = False
+        self.settings = load_settings()
 
     def run(self):
         while True:
@@ -500,11 +512,13 @@ class ParserGui(Parser):
                 print('{} совпадений'.format(str(len(self.matches))))
                 print('Получение коэффициентов для совпадений')
                 for match in self.matches:
-                    match.update_totals()
+                    if len(match.event1.scores_1) == 1:
+                        match.update_totals()
                 print('Поиск вилок')
                 for match in self.matches:
                     match.update_vilki()
-                vilki = [vilka for match in self.matches for vilka in match.vilki]
+                vilki = [vilka for match in self.matches for vilka in match.vilki if
+                         self.settings['delta_d'][0] < vilka.value < self.settings['delta_d'][1]]
                 print('Найдено {} вилок'.format(len(vilki)))
                 if vilki:
                     print('Обновление виджетов')
@@ -536,6 +550,7 @@ class ParserGui(Parser):
 
     def stop(self):
         self.breaker = True
+
 
 if __name__ == '__main__':
     app = Parser()

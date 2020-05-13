@@ -67,6 +67,7 @@ class ParserThread(Thread):
     def stop(self):
         self.parser.stop()
 
+
 if __name__ == '__main__':
     app = MainApp()
     app.run()
