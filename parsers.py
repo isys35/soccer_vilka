@@ -12,7 +12,7 @@ def save_page(html, file_name):
         html_file.write(html)
 
 def load_settings():
-    with open('settings','r',encoding='utf8') as settings_file:
+    with open('settings.txt', 'r',encoding='utf8') as settings_file:
         settings_str = settings_file.read()
         splited = settings_str.split(';')
         settings = {}
