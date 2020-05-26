@@ -14,6 +14,7 @@ class VilkaWidget(ButtonBehavior, BoxLayout):
     points = StringProperty()
     kf_pari = StringProperty()
     kf_xbet = StringProperty()
+    time = StringProperty()
 
     def __init__(self, vilka, calculator):
         super().__init__()
@@ -29,6 +30,12 @@ class VilkaWidget(ButtonBehavior, BoxLayout):
         self.points = str(self.vilka.point)
         self.kf_pari = str(self.vilka.kf1)
         self.kf_xbet = str(self.vilka.kf2)
+        if self.vilka.time == 'main_time':
+            self.time = 'Общее время'
+        elif self.vilka.time == '1_time':
+            self.time = '1-й тайм'
+        elif self.vilka.time == '2_time':
+            self.time = '2-й тайм'
 
     def on_press(self):
         self.calculator.value_str = self.value_str
@@ -39,7 +46,9 @@ class VilkaWidget(ButtonBehavior, BoxLayout):
         self.calculator.points = self.points
         self.calculator.kf_pari = self.kf_pari
         self.calculator.kf_xbet = self.kf_xbet
+        self.calculator.time = self.time
         self.calculator.calculate()
+
 
     with open("vilkawidget.kv", encoding='utf8') as f:
         Builder.load_string(f.read())

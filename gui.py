@@ -25,6 +25,7 @@ class Calculactor(BoxLayout):
     kf_pari = StringProperty()
     kf_xbet = StringProperty()
     total_score = StringProperty()
+    time = StringProperty()
 
     def calculate(self, *args):
         self.ids.bet1.bind(on_text_validate=self.calculate)

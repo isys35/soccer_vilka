@@ -13,7 +13,7 @@ def save_page(html, file_name):
 
 
 def load_settings():
-    with open('settings.txt', 'r',encoding='utf8') as settings_file:
+    with open('settings.txt', 'r', encoding='utf8') as settings_file:
         settings_str = settings_file.read()
         splited = settings_str.split(';')
         settings = {}
@@ -171,11 +171,13 @@ class Pari(Bookmaker):
                             sys.exit()
         bk_row1_prop = row1[1].select('.bk')
         time_2_info = None
+        time_1_info = None
         for time_info in bk_row1_prop:
             tds_text = [td.text for td in time_info.select('td')]
             if '2-й тайм:' in tds_text:
                 time_2_info = time_info
-                break
+            elif '1-й тайм:' in tds_text:
+                time_1_info = time_info
         if time_2_info:
             totals['2_time'] = {}
             td_2_time = time_2_info.select('td')
@@ -183,6 +185,13 @@ class Pari(Bookmaker):
                 totals['2_time']['total'] = {float(td_2_time[id_total].text):
                                                             {'more': float(td_2_time[id_total + 1].text),
                                                              'smaller': float(td_2_time[id_total + 2].text)}}
+        if time_1_info:
+            totals['1_time'] = {}
+            td_1_time = time_1_info.select('td')
+            if id_total:
+                totals['1_time']['total'] = {float(td_1_time[id_total].text):
+                                                 {'more': float(td_1_time[id_total + 1].text),
+                                                  'smaller': float(td_1_time[id_total + 2].text)}}
         return totals
 
     def get_status_game(self, index):
@@ -241,7 +250,7 @@ class Xbet(Bookmaker):
             try:
                 timer = event['SC']['TS']
             except KeyError:
-                save_page(url, 'key_eror_xbet.html')
+                save_page(response, 'key_eror_xbet.html')
                 sys.exit()
             event_info = Event(bookmaker=self,
                                champ=champ,
@@ -257,14 +266,14 @@ class Xbet(Bookmaker):
         return events_objs
 
     @staticmethod
-    def get_id_2_time(data):
+    def get_time_id(data, time):
         if 'SG' in data['Value']:  # проверяем, есть ли выбор тайма
             selecter_time = data['Value']['SG']
             for time in selecter_time:
                 if 'PN' in time:
-                    if time['PN'] == '2-й Тайм':
-                        time_2_id = time['I']
-                        return time_2_id
+                    if time['PN'] == f'{time}-й Тайм':
+                        time_id = time['I']
+                        return time_id
 
     @staticmethod
     def get_totals_from_json(data):
@@ -302,12 +311,18 @@ class Xbet(Bookmaker):
         except TypeError:
             print(data_main_time)
             sys.exit()
-        time_2_id = self.get_id_2_time(data_main_time)
+        time_2_id = self.get_time_id(data_main_time, 2)
         if time_2_id:
             url_2_time = url.format(time_2_id)
             response = self.get_response(url_2_time)
             data_time_2 = response.json()
             totals['2_time'] = self.get_totals_from_json(data_time_2)
+        time_1_id = self.get_time_id(data_main_time, 1)
+        if time_1_id:
+            url_1_time = url.format(time_1_id)
+            response = self.get_response(url_1_time)
+            data_time_1 = response.json()
+            totals['1_time'] = self.get_totals_from_json(data_time_1)
         return totals
 
 
@@ -394,14 +409,14 @@ class Match:
         self.event1.update_totals()
         self.event2.update_totals()
 
+
     def update_status(self):
         if not self.event1.bookmaker.get_status_game(self.event1.index):
             self.status_in_play = False
 
-    def update_vilki(self):
+    def get_vilka(self, time):
         totals1 = self.event1.totals
         totals2 = self.event2.totals
-        time = '2_time'
         vilka_new = []
         if time in totals1 and time in totals2:
             print(totals1[time])
@@ -413,6 +428,13 @@ class Match:
                         if point_event1 == point_event2:
                             vilka = Vilka(self, time, point_event1, total_type)
                             vilka_new.append(vilka)
+        return vilka_new
+
+    def update_vilki(self):
+        vilka_main_time = self.get_vilka('main_time')
+        vilka_1_time = self.get_vilka('1_time')
+        vilka_2_time = self.get_vilka('2_time')
+        vilka_new = vilka_main_time + vilka_1_time + vilka_2_time
         for vilka in vilka_new:
             if vilka in self.vilki:
                 self.vilki[self.vilki.index(vilka)].update_vilka()
@@ -510,10 +532,13 @@ class ParserGui(Parser):
                 print('Поиск совпадений')
                 self.update_match()
                 print('{} совпадений'.format(str(len(self.matches))))
+                if not len(self.matches):
+                    self.update_widgets([])
+                    continue
                 print('Получение коэффициентов для совпадений')
                 for match in self.matches:
-                    if len(match.event1.scores_1) == 1:
-                        match.update_totals()
+                    # if len(match.event1.scores_1) == 1:
+                    match.update_totals()
                 print('Поиск вилок')
                 for match in self.matches:
                     match.update_vilki()
