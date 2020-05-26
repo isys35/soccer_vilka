@@ -49,6 +49,5 @@ class VilkaWidget(ButtonBehavior, BoxLayout):
         self.calculator.time = self.time
         self.calculator.calculate()
 
-
     with open("vilkawidget.kv", encoding='utf8') as f:
         Builder.load_string(f.read())

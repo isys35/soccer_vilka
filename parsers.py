@@ -408,6 +408,8 @@ class Match:
     def update_totals(self):
         self.event1.update_totals()
         self.event2.update_totals()
+        print(self.event1.totals)
+        print(self.event2.totals)
 
 
     def update_status(self):
