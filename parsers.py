@@ -139,7 +139,7 @@ class Pari(Bookmaker):
             thead = table.select_one('tr')
         except AttributeError:
             save_page(response.text, str(index) +'AttributeError' + 'pari_event.html')
-            sys.exit()
+            return totals
         table_headers = thead.select('th')
         row1 = soup.select('.row1')
         td_row1 = row1[0].select('td')

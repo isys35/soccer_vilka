@@ -1,3 +1,4 @@
+#:import MDIconButton kivymd.uix.button.MDIconButton
 <VilkaWidget>:
     orientation: 'vertical'
     size_hint_y: None
@@ -28,9 +29,8 @@
             text: '[b]{}[/b]'.format(root.time)
             markup: True
             size_hint_x: .3
-        Label:
-            size_hint_x: .15
-            text: ''
+        MDIconButton:
+            icon: 'delete'
     BoxLayout:
         size_hint_y:.35
         canvas.before:

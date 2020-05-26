@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from kivy.app import App
+from kivymd.app import MDApp
 from kivy.uix.boxlayout import BoxLayout
 from kivy.lang import Builder
 from kivy.core.window import Window
 from threading import Thread
 from parsers import ParserGui
 from kivy.properties import StringProperty
-
+from kivymd.theming import ThemeManager
 
 Window.size = (820, 1000)
 
@@ -47,8 +47,10 @@ with open("Main.kv", encoding='utf8') as f:
     presentation = Builder.load_string(f.read())
 
 
-class MainApp(App):
+class MainApp(MDApp):
     def __init__(self):
+        self.theme_cls = ThemeManager()
+        self.theme_cls.theme_style = "Dark"
         super().__init__()
         self.parser = ParserThread(self)
         self.parser.start()
